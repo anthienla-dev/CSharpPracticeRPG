@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 namespace CSharpPracticeRPG
 {
     public class NPC //Catch-all class for Inheritance
@@ -19,26 +20,31 @@ namespace CSharpPracticeRPG
         }
         public virtual void TakeDamage(int dmgAmount) => this.hp = Math.Max(0, this.hp - dmgAmount);
         public virtual void HealHp(int healAmount, int maxHP) => this.hp = Math.Min(maxHP, this.hp + healAmount);
+        public virtual int CalculateDamage(NPC target)
+        {
+            return this.atkPower - target.defense;
+        }
+        public virtual void Attack(NPC target)
+        {
+            int damageDealt = CalculateDamage(target);
+            target.hp = Math.Max(0, target.hp - damageDealt);
+        }
     }
     public class Playable : NPC
     {
         public Playable(string name, int atkPower, int hp, int defense) : base(name, atkPower, hp, defense) //This is a CONSTRUCTOR that inherits from parent constructor!
         { //The innards of this constructor is inherited from Parent
         }
-        public void Attack(Playable playable, Enemy enemy)
+        public override int CalculateDamage(NPC target) //Change the calc 
         {
-            enemy.hp = Math.Max(0, enemy.hp - (playable.atkPower - enemy.defense/2)); //Mimicking Terraria defense
+            return Math.Max(0, this.atkPower - target.defense/2);
         }
 
-    }
+    } //TODO: Make a run battle function
     public class Enemy :NPC
     {
         public Enemy(string name, int atkPower, int hp, int defense) : base(name, atkPower, hp, defense)
         {
-        }
-        public void Attack(Playable playable, Enemy enemy)
-        {
-            playable.hp = Math.Max(0, playable.hp - (enemy.atkPower - playable.defense));
         }
     }
     internal class Program
@@ -89,21 +95,47 @@ namespace CSharpPracticeRPG
             int remainingHealth = Math.Max(0, health-damageTaken); //Shortcut for If check
             return remainingHealth;
         }
-        static void Main(string[] args)  //TODO: Tier 1 Gauntlet 3!
+        public static void RunBattle(Playable player, Enemy enemy)
         {
-            string askForHostileHealth = "Enter your enemy's health: ";
-            string askForHostileDefense = "Enter your enemy's defense: ";
-            string askForAttackPower = "How much damage does your attack deal: ";
-            string askForCrit = "How much crit?: ";
-            int enemyHealth = ReadStat(askForHostileHealth); //So we don't need to write the read script for both health and defense (DRY)
-            int enemyDefense = ReadStat(askForHostileDefense); 
-            int playerAttackPower = ReadStat(askForAttackPower);
-            int playerCritChance = ReadStat(askForCrit);
-            int damageDealt = Attack( enemyDefense, playerAttackPower, playerCritChance);
-            int remainingEnemyHealth = RemainingHealth(enemyHealth, damageDealt);
-            Console.WriteLine($"The enemy has {enemyHealth} HP" );
-            Console.WriteLine($"The enemy has {enemyDefense} Def");
-            Console.WriteLine($"Your attack deals {damageDealt} Dmg. {remainingEnemyHealth} HP left");
+            int roundCount = 1;
+            while(player.hp > 0 && enemy.hp >0)
+            {
+                Console.WriteLine($"Round {roundCount}");
+                Console.WriteLine("Choose your action, h= heal, a = attack:  ");
+                string choice = Console.ReadLine().ToLower() ; //This is a flawed decision, but enough for a beginner
+                if(choice == "h")
+                {
+                    player.HealHp(250, 500);
+                    Console.WriteLine($"You healed 250HP, your current HP is {player.hp}");
+                }
+                if(choice == "a")
+                {
+                    player.Attack(enemy);
+                    Console.WriteLine($"You attacked for {player.CalculateDamage(enemy)} DMG. The enemy's HP is currently {enemy.hp} HP");
+                    if (enemy.hp <= 0)
+                    {
+                        Console.WriteLine("You won!");
+                        break;
+                    }
+
+                }
+                enemy.Attack(player);
+                Console.WriteLine($"The enemy attacked for {enemy.CalculateDamage(player)} DMG. Your HP is currently {player.hp}");
+                if (player.hp <= 0)
+                {
+                    Console.WriteLine("You lose!");
+                    break;
+                }
+                roundCount++;
+
+            }
+            
+        }
+        static void Main(string[] args) 
+        {
+            Playable player = new Playable("Lorem Ipsum", 150, 500, 20);
+            Enemy slime = new Enemy("Suspicious Slime", 90, 1000, 15);
+            RunBattle(player, slime);
         }
     }
 }
