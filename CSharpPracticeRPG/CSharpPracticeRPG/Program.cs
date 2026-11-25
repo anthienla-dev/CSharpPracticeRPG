@@ -47,6 +47,62 @@ namespace CSharpPracticeRPG
         {
         }
     }
+    public class Item
+    {
+        public string name;
+        public int amount;
+
+        public Item(string name, int amount)
+        {
+            this.name = name;
+            this.amount = amount;
+        }
+
+
+    }
+    public class Inventory //Because Inventory manages stuffs and is important
+    {
+        public List<Item> inventory;
+        public int MaxCapacity;
+        
+        public Inventory(int capacity) //Inventory already exists in the Class and should not be edited, so dont put it as Para
+        {
+            this.MaxCapacity = capacity;
+            this.inventory = new List<Item>(); //TODO: continue the exercise
+        }
+
+        public void AddItem (Item item,  int amount)
+        {
+            for(int i = 0; i < amount; i++)
+            {
+                inventory.Add(item);    
+            }
+        }
+        public Item findItem(string itemName)
+        {
+            Item foundObject = null;
+            foreach(Item item in inventory)
+            {
+                if(itemName == item.name)
+                {
+                    foundObject = item;
+                }
+            }
+            return foundObject;
+        }
+        public void RemoveItem(string itemName) //Search by item name!
+        {
+            Item foundObject = findItem(itemName);
+            inventory.Remove(foundObject);
+        }
+        public void ReadList()
+        {
+            foreach(Item i in inventory)
+            {
+                Console.WriteLine(i.name);
+            }
+        }
+    }
     internal class Program
     {
         private static Random dice = new Random(); //For randomness.
@@ -129,13 +185,21 @@ namespace CSharpPracticeRPG
                 roundCount++;
 
             }
-            
         }
         static void Main(string[] args) 
         {
             Playable player = new Playable("Lorem Ipsum", 150, 500, 20);
             Enemy slime = new Enemy("Suspicious Slime", 90, 1000, 15);
-            RunBattle(player, slime);
+            //RunBattle(player, slime);
+            Inventory playerInventory = new Inventory(60); //Magic capacity number to test
+            Item sword = new Item("Sword", 1);
+            Item potion = new Item("Potion", 2);
+            playerInventory.AddItem(sword, 1);
+            playerInventory.AddItem(potion, 2);
+            playerInventory.ReadList();
+            playerInventory.RemoveItem("Potion");
+            playerInventory.ReadList();
+
         }
     }
 }
